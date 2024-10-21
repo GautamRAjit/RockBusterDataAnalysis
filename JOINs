@@ -1,0 +1,60 @@
+# Find the average amount paid by the top 5 customers.
+
+CREATE VIEW Top10Countries AS
+SELECT C3.country, COUNT(C1.customer_id)
+FROM Customer C1
+INNER JOIN Address A1 ON C1.address_id = A1.address_id
+INNER JOIN City C2 ON C2.city_id = A1.city_id
+INNER JOIN Country C3 ON C3.country_id = C2.country_id
+GROUP BY C3.country
+ORDER BY COUNT(C1.customer_id) DESC
+LIMIT 10;
+
+CREATE VIEW Top10Cities AS
+SELECT C6.city, COUNT(C5.customer_id)
+FROM Customer C5
+INNER JOIN Address A2 ON C5.address_id = A2.address_id
+INNER JOIN City C6 ON C6.city_id = A2.city_id
+INNER JOIN Country C7 ON C7.country_id = C6.country_id
+INNER JOIN Top10Countries T1 ON T1.country = C7.country
+GROUP BY C6.city
+ORDER BY COUNT(C5.customer_id) DESC
+LIMIT 10;
+
+SELECT AVG(Total_Amount_Paid.Total)
+FROM
+(SELECT C3.customer_id, C3.first_name, C3.last_name, C4.country, C5.city,
+SUM(P2.amount) AS Total
+FROM Customer C3
+INNER JOIN Payment P2 ON C3.customer_id = P2.customer_id
+INNER JOIN Address A2 ON C3.address_id = A2.address_id
+INNER JOIN City C5 ON C5.city_id = A2.city_id
+INNER JOIN Country C4 ON C4.country_id = C5.country_id
+WHERE C5.city IN (SELECT city FROM Top10Cities)
+GROUP BY C3.customer_id, C3.first_name, C3.last_name, C4.country, C5.city
+ORDER BY SUM(P2.amount) DESC
+LIMIT 5) AS Total_Amount_Paid;
+
+# Find out how many of the top 5 customers you identified in step 1 are based within each
+country.
+
+SELECT C8.country, COUNT(DISTINCT C6.customer_id) AS "all_customer_count",
+COUNT(DISTINCT J2.customer_id) AS "top_customer_count"
+FROM Customer C6
+INNER JOIN Address A3 ON C6.address_id = A3.address_id
+INNER JOIN City C7 ON C7.city_id = A3.city_id
+INNER JOIN Country C8 ON C8.country_id = C7.country_id
+LEFT JOIN
+(SELECT C3.customer_id, C3.first_name, C3.last_name, C4.country, C5.city,
+SUM(P2.amount) AS Total
+FROM Customer C3
+INNER JOIN Payment P2 ON C3.customer_id = P2.customer_id
+INNER JOIN Address A2 ON C3.address_id = A2.address_id
+INNER JOIN City C5 ON C5.city_id = A2.city_id
+INNER JOIN Country C4 ON C4.country_id = C5.country_id
+WHERE C5.city IN (SELECT city FROM Top10Cities)
+GROUP BY C3.customer_id, C3.first_name, C3.last_name, C4.country, C5.city
+ORDER BY SUM(P2.amount) DESC
+LIMIT 5) J2 ON C8.country = J2.country
+GROUP BY C8.country
+ORDER BY COUNT(DISTINCT C6.customer_id) DESC;
