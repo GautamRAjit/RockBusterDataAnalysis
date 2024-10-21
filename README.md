@@ -21,5 +21,5 @@ The following are the main questions that the company would like a data analyst 
 - PostgreSQL
 - Tableau Public (for visualizations)
 
-
+You can view the visualizations here : [Rockbuster Data Analysis](https://public.tableau.com/authoring/RockbusterDataAnalysisProject_17295438184230/RockbusterDataAnalysis)
 
